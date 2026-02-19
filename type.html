@@ -14,13 +14,18 @@
     tinymce.init({
         selector: 'textarea',
         setup: function(editor) {
+            //The editor is used to extract the header text from tinymce
             editor.on('input change', function(){
+                //extract content from tiny
                 const content = editor.getContent();
+                //parse
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(content, 'text/html');
+                //differeintiate by headers
                 const headers = doc.querySelectorAll('h1, h2, h3, h4, h5, h6');
 
                 let output = ' ';
+                //construct ouptut from headers
                 headers.forEach(h => {
                     output += `<p><strong>${h.tagName}:</strong> ${h.textContent}</p>`;
                 });
@@ -60,6 +65,7 @@
     <textarea>
     Welcome to TinyMCE!
     </textarea>
+    <div id="output"></div>
     
     <form method="post">
     </form>
