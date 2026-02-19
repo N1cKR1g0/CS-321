@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.tiny.cloud/1/1m68ji9fcdxynvnu3r0zc4bo336yiluenxc479l26knzijyh/tinymce/8/tinymce.min.js" referrerpolicy="origin" crossorigin="anonymous"></script>
+     </head>
+
+  <body>
+   
+
+    <!-- Place the following <script> and <textarea> tags your HTML's <body> -->
+    <script>
+    tinymce.init({
+        selector: 'textarea',
+        setup: function(editor) {
+            editor.on('input change', function(){
+                const content = editor.getContent();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(content, 'text/html');
+                const headers = doc.querySelectorAll('h1, h2, h3, h4, h5, h6');
+
+                let output = ' ';
+                headers.forEach(h => {
+                    output += `<p><strong>${h.tagName}:</strong> ${h.textContent}</p>`;
+                });
+                document.getElementById('output').innerHTML = output;
+            });
+        },
+        plugins: [
+            // Core editing features
+            'anchor', 'autolink', 'charmap', 'codesample', 'emoticons', 'link', 'lists', 'media', 'searchreplace', 'table', 'visualblocks', 'wordcount',
+            // Your account includes a free trial of TinyMCE premium features
+            // Try the most popular premium features until Mar 4, 2026:
+            'checklist', 'mediaembed', 'casechange', 'formatpainter', 'pageembed', 'a11ychecker', 'tinymcespellchecker', 'permanentpen', 'powerpaste', 'advtable', 'advcode', 'advtemplate', 'ai', 'uploadcare', 'mentions', 'tinycomments', 'tableofcontents', 'footnotes', 'mergetags', 'autocorrect', 'typography', 'inlinecss', 'markdown','importword', 'exportword', 'exportpdf'
+        ],
+        toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography uploadcare | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
+        tinycomments_mode: 'embedded',
+        tinycomments_author: 'Author name',
+        mergetags_list: [
+        { value: 'First.Name', title: 'First Name' },
+        { value: 'Email', title: 'Email' },
+        ],
+        ai_request: (request, respondWith) => respondWith.string(() => Promise.reject('See docs to implement AI Assistant')),
+        uploadcare_public_key: '50a1b53710632bc12924',
+    });
+    const content = tinymce.activeEditor.getContent();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(content, 'text/html');
+    const headers = doc.querySelectorAll('h1, h2, h3, h4, h5, h6');
+
+    let output = '';
+    headers.forEach(h => {
+    output += `<p>${h.textContent}</p>`;
+    });
+
+    document.getElementById('output').innerHTML = output;   
+    </script>
+    <h1>TinyMCE Quick Start Guide :)</h1>
+    <textarea>
+    Welcome to TinyMCE!
+    </textarea>
+    
+    <form method="post">
+    </form>
+  </body>
+</html>
