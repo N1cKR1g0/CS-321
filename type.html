@@ -1,73 +1,177 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="https://cdn.tiny.cloud/1/1m68ji9fcdxynvnu3r0zc4bo336yiluenxc479l26knzijyh/tinymce/8/tinymce.min.js" referrerpolicy="origin" crossorigin="anonymous"></script>
-     </head>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <body>
-   
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://cdn.tiny.cloud/1/1m68ji9fcdxynvnu3r0zc4bo336yiluenxc479l26knzijyh/tinymce/8/tinymce.min.js"></script>
 
-    <!-- Place the following <script> and <textarea> tags your HTML's <body> -->
-    <script>
-    tinymce.init({
-        selector: 'textarea',
-        setup: function(editor) {
-            //The editor is used to extract the header text from tinymce
-            editor.on('input change', function(){
-                //extract content from tiny
-                const content = editor.getContent();
-                //parse
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(content, 'text/html');
-                //differeintiate by headers
-                const headers = doc.querySelectorAll('h1, h2, h3, h4, h5, h6');
+<style>
+body {
+  margin: 0;
+}
 
-                let output = ' ';
-                //construct ouptut from headers
-                headers.forEach(h => {
-                    output += `<p><strong>${h.tagName}:</strong> ${h.textContent}</p>`;
-                });
-                document.getElementById('output').innerHTML = output;
-            });
-        },
-        plugins: [
-            // Core editing features
-            'anchor', 'autolink', 'charmap', 'codesample', 'emoticons', 'link', 'lists', 'media', 'searchreplace', 'table', 'visualblocks', 'wordcount',
-            // Your account includes a free trial of TinyMCE premium features
-            // Try the most popular premium features until Mar 4, 2026:
-            'checklist', 'mediaembed', 'casechange', 'formatpainter', 'pageembed', 'a11ychecker', 'tinymcespellchecker', 'permanentpen', 'powerpaste', 'advtable', 'advcode', 'advtemplate', 'ai', 'uploadcare', 'mentions', 'tinycomments', 'tableofcontents', 'footnotes', 'mergetags', 'autocorrect', 'typography', 'inlinecss', 'markdown','importword', 'exportword', 'exportpdf'
-        ],
-        toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography uploadcare | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
-        tinycomments_mode: 'embedded',
-        tinycomments_author: 'Author name',
-        mergetags_list: [
-        { value: 'First.Name', title: 'First Name' },
-        { value: 'Email', title: 'Email' },
-        ],
-        ai_request: (request, respondWith) => respondWith.string(() => Promise.reject('See docs to implement AI Assistant')),
-        uploadcare_public_key: '50a1b53710632bc12924',
+.editor-layout {
+  display: flex;
+  height: 90vh;
+}
+
+.left-panel {
+  width: 50%;
+  border-right: 1px solid #ccc;
+}
+
+.right-panel {
+  width: 50%;
+  background: #f5f5f5;
+  overflow: hidden;
+}
+
+#mindmap {
+  width: 100%;
+  height: 100%;
+}
+
+.tox-tinymce {
+  height: 100% !important;
+}
+</style>
+</head>
+
+<body>
+
+<h1>MindScribe 321</h1>
+
+<div class="editor-layout">
+  <div class="left-panel">
+    <textarea>Welcome to MindScribe!</textarea>
+  </div>
+
+  <div class="right-panel">
+    <div id="mindmap"></div>
+  </div>
+</div>
+
+<script>
+
+// Build hierarchy from headers without fake "Document"
+function buildHierarchy(headers) {
+  const stack = [];
+  let root = null;
+
+  headers.forEach(h => {
+    const level = parseInt(h.tagName[1]);
+    const node = { name: h.textContent, children: [] };
+
+    if (!root) {
+      root = node;
+      stack.push(node);
+      return;
+    }
+
+    while (stack.length >= level) {
+      stack.pop();
+    }
+
+    stack[stack.length - 1].children.push(node);
+    stack.push(node);
+  });
+
+  return root;
+}
+
+// Render mind map as hierarchical tree with oval nodes
+function renderMindMap(headers) {
+  const data = buildHierarchy(headers);
+  if (!data) return;
+
+  d3.select("#mindmap").selectAll("*").remove();
+
+  const width = document.querySelector(".right-panel").clientWidth;
+  const height = document.querySelector(".right-panel").clientHeight;
+
+  const svg = d3.select("#mindmap")
+    .append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+  const g = svg.append("g");
+
+  svg.call(
+    d3.zoom().on("zoom", (event) => {
+      g.attr("transform", event.transform);
+    })
+  );
+
+  const root = d3.hierarchy(data);
+  const tree = d3.tree().size([width - 100, height - 100]);
+  tree(root);
+
+  // Links
+  g.selectAll("line")
+    .data(root.links())
+    .enter()
+    .append("line")
+    .attr("x1", d => d.source.x)
+    .attr("y1", d => d.source.y)
+    .attr("x2", d => d.target.x)
+    .attr("y2", d => d.target.y)
+    .attr("stroke", "#999");
+
+  // Nodes group
+  const nodes = g.selectAll("g.node")
+    .data(root.descendants())
+    .enter()
+    .append("g")
+    .attr("class", "node")
+    .attr("transform", d => `translate(${d.x}, ${d.y})`);
+
+ 
+
+  // Labels inside ovals
+  const texts = nodes.append("text")
+  .attr("text-anchor", "middle")
+  .attr("dy", "0.35em")
+  .attr("fill", "white")
+  .text(d => d.data.name)
+  .each(function(d) {
+      // measure text width
+      const textWidth = this.getBBox().width;
+      d.textWidth = textWidth;
+  });
+  // Oval nodes (size depends on text)
+    nodes.insert("ellipse", "text") // insert before text so text is on top
+    .attr("rx", d => Math.max(40, d.textWidth/2 + 10)) // min width 40, else based on text
+    .attr("ry", d => 25 - d.depth*2) // vertical radius slightly smaller for deeper nodes
+    .attr("fill", "#4a90e2");
+}
+
+// Initialize TinyMCE with your existing toolbar/plugins
+tinymce.init({
+  selector: 'textarea',
+  height: '100%',
+  menubar: false,
+  plugins: [
+    'anchor', 'autolink', 'charmap', 'codesample', 'emoticons', 'link', 'lists', 'media', 'searchreplace', 'table', 'visualblocks', 'wordcount'
+  ],
+  toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography uploadcare | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
+        
+  setup: function(editor) {
+    editor.on('input change', function() {
+      const content = editor.getContent();
+
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(content, 'text/html');
+
+      const headers = doc.querySelectorAll('h1, h2, h3, h4, h5, h6');
+
+      renderMindMap(headers);
     });
-    const content = tinymce.activeEditor.getContent();
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(content, 'text/html');
-    const headers = doc.querySelectorAll('h1, h2, h3, h4, h5, h6');
+  }
+});
 
-    let output = '';
-    headers.forEach(h => {
-    output += `<p>${h.textContent}</p>`;
-    });
+</script>
 
-    document.getElementById('output').innerHTML = output;   
-    </script>
-    <h1>TinyMCE Quick Start Guide :)</h1>
-    <textarea>
-    Welcome to TinyMCE!
-    </textarea>
-    <div id="output"></div>
-    
-    <form method="post">
-    </form>
-  </body>
+</body>
 </html>
