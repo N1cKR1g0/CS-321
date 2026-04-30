@@ -101,29 +101,25 @@ const UI = (() => {
         g.attr('transform', event.transform);
       })
     );
-
-    const root = d3.hierarchy(tree);
     
-    // Check if we have multiple h1s (children of virtual root at level 0)
-    const isMultipleRoots = root.data.level === 0 && root.children && root.children.length > 1;
-    
-    if (isMultipleRoots) {
+    if (tree.children.length > 1) {
       // Render each h1 tree separately with horizontal spacing
-      const treeSpacing = width / (root.children.length + 1);
+      const treeSpacing = width / (tree.children.length + 1);
       let offsetX = treeSpacing;
       
-      root.children.forEach((h1Node, index) => {
+      tree.children.forEach((h1Node, index) => {
         const h1Root = d3.hierarchy(h1Node);
         const treeLayout = d3.tree().size([treeSpacing - 80, height - 100]);
         treeLayout(h1Root);
         
         // Create a separate group for each tree section
         const treeGroup = g.append('g').attr('class', `tree-section-${index}`);
-        renderTreeSection(treeGroup, h1Root, offsetX, 0);
+        renderTreeSection(treeGroup, h1Root, offsetX, 0, index);
         offsetX += treeSpacing;
       });
     } else {
       // Single tree - render normally
+      const root = d3.hierarchy(tree.children[0]);
       const treeLayout = d3.tree().size([width - 100, height - 100]);
       treeLayout(root);
       const treeGroup = g.append('g').attr('class', 'tree-section-0');

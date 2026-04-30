@@ -39,7 +39,7 @@ const MindmapService = (() => {
   function buildHierarchy(headers) {
     if (!headers || headers.length === 0) return null;
 
-    let root = { name: '', level: 1, children: [] };
+    let root = { name: '', level: 0, children: [] };
     const stack = [{ node: root, level: 0 }];
 
     headers.forEach(h => {
@@ -105,7 +105,7 @@ const MindmapService = (() => {
   }
 
   /**
-   * counts total nodes in the tree can be useful for stats/validation)
+   * counts total nodes in the tree can be useful for stats/validation
    * @param {Object} node
    * @returns {number}
    */
