@@ -2,43 +2,43 @@
  * firebaseService.js
  * PERSISTENCE LAYER — Database Access
  *
- * Responsibilities:
- *  - Initialize Firebase connection
- *  - Save a document (editor content + mindmap snapshot) to Firestore
- *  - Load a document by ID from Firestore
- *  - Generate a shareable link for a saved document
- *  - List recent documents for the current session
+ * responsibilities:
+ *  - should initialzie Firebase connection
+ *  - saves a document (editor content + mindmap snapshot) to Firestore
+ *  - loads a document by ID from Firestore
+ *  - generates a shareable link for a saved document
+ *  - lists recent documents for the current session
  *
- * This module has NO knowledge of TinyMCE, D3, or UI rendering.
- * It only reads and writes data to/from Firebase.
+ * 
+ * 
  *
- * SETUP: Replace the firebaseConfig object below with your own
- * Firebase project credentials from the Firebase Console.
+ * 
+ * 
  */
 
 const FirebaseService = (() => {
 
-  // ─── Firebase Configuration ───────────────────────────────────────────────
-  // TODO: Replace with your actual Firebase project config
+  // firebase config
+  // USING ALBERTS FIREBASE ACCOUNT PROJECT CREDENTIALS
   const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyD1kintGhDeLZu5DnsQL2dwyqm-a-VDohM",
+    authDomain: "mindscribe321.firebaseapp.com",
+    projectId: "mindscribe321",
+    storageBucket: "mindscribe321.firebasestorage.app",
+    messagingSenderId: "530725707810",
+    appId: "1:530725707810:web:a02349033ec163f62f6a7b"
   };
 
-  // ─── State ────────────────────────────────────────────────────────────────
+  // state
   let db = null;
   let isInitialized = false;
 
-  // ─── Initialization ───────────────────────────────────────────────────────
+  // initialization
 
   /**
-   * Initializes Firebase and Firestore.
-   * Must be called once before any other method.
-   * Safe to call multiple times (idempotent).
+   * initializing firebase and firestore
+   * has to be called once before any other method.
+   * can be called multiple times
    */
   function init() {
     if (isInitialized) return;
@@ -57,7 +57,7 @@ const FirebaseService = (() => {
   }
 
   /**
-   * Guards against calling Firebase methods before init().
+   * protects against calling Firebase methods before init().
    */
   function assertReady() {
     if (!isInitialized || !db) {
@@ -65,16 +65,16 @@ const FirebaseService = (() => {
     }
   }
 
-  // ─── Document Operations ──────────────────────────────────────────────────
+  // document operations
 
   /**
-   * Saves a document to the "documents" Firestore collection.
+   * saves a document to the "documents" Firestore collection
    *
    * @param {Object} docData - The document to save
-   * @param {string} docData.title       - Document title (first h1 text or default)
-   * @param {string} docData.content     - Raw HTML from TinyMCE editor
-   * @param {Object} docData.mindmapTree - Serialized mindmap tree from MindmapService
-   * @param {string} [docData.id]        - If provided, updates existing doc; otherwise creates new
+   * @param {string} docData.title       - doc title (first h1 text or default)
+   * @param {string} docData.content     - raw HTML from TinyMCE editor
+   * @param {Object} docData.mindmapTree - serial. mindmap tree from MindmapService
+   * @param {string} [docData.id]        - if pres, updates existing doc; otherwise creates new
    *
    * @returns {Promise<string>} - The document ID (new or existing)
    */
@@ -90,12 +90,12 @@ const FirebaseService = (() => {
 
     try {
       if (id) {
-        // Update existing document
+        // update existing document
         await db.collection('documents').doc(id).set(payload, { merge: true });
         console.log(`[FirebaseService] Document updated: ${id}`);
         return id;
       } else {
-        // Create new document
+        // create new document
         payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
         const ref = await db.collection('documents').add(payload);
         console.log(`[FirebaseService] Document created: ${ref.id}`);
@@ -108,7 +108,7 @@ const FirebaseService = (() => {
   }
 
   /**
-   * Loads a document by its Firestore document ID.
+   * loads a document by its Firestore document ID
    *
    * @param {string} docId - The Firestore document ID
    * @returns {Promise<Object|null>} - The document data, or null if not found
@@ -130,10 +130,10 @@ const FirebaseService = (() => {
   }
 
   /**
-   * Fetches the most recently updated documents (for a "recent docs" list).
+   * fetches the most recently updated documents for a "recent docs list"
    *
-   * @param {number} [limit=10] - Max number of documents to return
-   * @returns {Promise<Array>} - Array of document objects
+   * @param {number} [limit=10] - max # of docs to return
+   * @returns {Promise<Array>} - array of doc objects
    */
   async function listRecentDocuments(limit = 10) {
     assertReady();
@@ -151,15 +151,15 @@ const FirebaseService = (() => {
     }
   }
 
-  // ─── Share Link ───────────────────────────────────────────────────────────
+  // share link
 
   /**
-   * Generates a shareable URL for a saved document.
-   * The URL encodes the document ID as a query parameter so anyone
-   * with the link can open and view the mindmap.
+   * generates a shareable URL for a saved document
+   * the URL encodes the document ID as a query parameter so anyone
+   * with the link can open and view the mindmap
    *
-   * @param {string} docId - The Firestore document ID
-   * @returns {string} - Full shareable URL
+   * @param {string} docId - the Firestore document ID
+   * @returns {string} - full shareable URL
    */
   function generateShareLink(docId) {
     const base = window.location.origin + window.location.pathname;
@@ -167,8 +167,8 @@ const FirebaseService = (() => {
   }
 
   /**
-   * Reads the document ID from the current page URL (if present).
-   * Used on page load to auto-load a shared document.
+   * read the document ID from the current page URL (if present)
+   * use on page load to auto-load a shared document
    *
    * @returns {string|null} - Document ID from URL, or null
    */
@@ -177,7 +177,7 @@ const FirebaseService = (() => {
     return params.get('doc') || null;
   }
 
-  // ─── Public API ───────────────────────────────────────────────────────────
+  //  public API 
   return {
     init,
     saveDocument,

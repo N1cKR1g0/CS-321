@@ -17,16 +17,17 @@
 
 const UI = (() => {
 
-  // ─── State ────────────────────────────────────────────────────────────────
+  // state
   let currentDocId = null;       // Firestore ID of the currently open document
   let currentTree = null;        // Last rendered mindmap tree
   let saveTimeout = null;        // Debounce timer for auto-save
 
-  // ─── TinyMCE Initialization ───────────────────────────────────────────────
+  // tinymce initialization
 
   function initEditor() {
     tinymce.init({
       selector: '#editor-textarea',
+      license_key: 'gpl',
       height: '100%',
       menubar: false,
       plugins: [
@@ -53,12 +54,12 @@ const UI = (() => {
     });
   }
 
-  // ─── Content Change Handler ───────────────────────────────────────────────
+  // content change
 
   /**
-   * Called on every editor change.
-   * Delegates parsing/hierarchy to MindmapService, then renders.
-   * Also triggers debounced auto-save.
+   * called on every editor change
+   * delegates parsing/hierarchy to MindmapService, then renders
+   * triggers auto-save
    *
    * @param {string} html - Raw HTML from TinyMCE
    */
@@ -69,13 +70,13 @@ const UI = (() => {
     scheduleAutoSave(html);
   }
 
-  // ─── D3 Mind Map Renderer ─────────────────────────────────────────────────
+  // d3 mind map renderer
 
   /**
-   * Renders the mindmap hierarchy as a D3 tree with ellipse nodes.
-   * This is purely a visual concern — it receives a tree and draws it.
+   * renders mindmap hierarchy as d3 tree with elliptical nodes
+   * 
    *
-   * @param {Object|null} tree - Mindmap tree from MindmapService
+   * @param {Object|null} tree - mindmap tree from MindmapService
    */
   function renderMindmap(tree) {
     const container = document.querySelector('.right-panel');
@@ -94,7 +95,7 @@ const UI = (() => {
 
     const g = svg.append('g');
 
-    // Enable pan/zoom
+    // enable pan zoom
     svg.call(
       d3.zoom().on('zoom', (event) => {
         g.attr('transform', event.transform);
@@ -105,7 +106,7 @@ const UI = (() => {
     const treeLayout = d3.tree().size([width - 100, height - 100]);
     treeLayout(root);
 
-    // Draw links
+    // draw links
     g.selectAll('line')
       .data(root.links())
       .enter()
@@ -117,7 +118,7 @@ const UI = (() => {
       .attr('stroke', '#c4a0ff')
       .attr('stroke-width', 1.5);
 
-    // Draw nodes
+    // drawing nodes
     const nodes = g.selectAll('g.node')
       .data(root.descendants())
       .enter()
@@ -125,7 +126,7 @@ const UI = (() => {
       .attr('class', 'node')
       .attr('transform', d => `translate(${d.x}, ${d.y + 50})`);
 
-    // Measure text first, then draw ellipse behind it
+    // measure text first, then draw ellipse behind it
     const texts = nodes.append('text')
       .attr('text-anchor', 'middle')
       .attr('dy', '0.35em')
@@ -140,7 +141,7 @@ const UI = (() => {
       .attr('rx', d => Math.max(40, d.textWidth / 2 + 14))
       .attr('ry', d => Math.max(16, 25 - d.depth * 2))
       .attr('fill', d => {
-        // Color nodes by depth
+        // color nodes by depth
         const colors = ['#7b2ff7', '#9b51e0', '#b06fd8', '#c48fd0', '#d8b0e8'];
         return colors[Math.min(d.depth, colors.length - 1)];
       })
@@ -148,7 +149,7 @@ const UI = (() => {
       .attr('stroke-width', 1.5);
   }
 
-  // ─── Save Logic ───────────────────────────────────────────────────────────
+  // saving files
 
   /**
    * Debounced auto-save: waits 2 seconds after last keystroke before saving.
@@ -161,8 +162,8 @@ const UI = (() => {
   }
 
   /**
-   * Saves the current document to Firebase.
-   * Extracts the title from the first header in the content.
+   * saves current doc firebase
+   * extracts the title from the first header in the content
    *
    * @param {string} html - Editor HTML content
    */
@@ -187,8 +188,8 @@ const UI = (() => {
   }
 
   /**
-   * Extracts a document title from the first header in the HTML.
-   * Falls back to 'Untitled Document'.
+   * extracts a document title from the first header in the HTML
+   * falls back to 'Untitled Document'
    *
    * @param {string} html
    * @returns {string}
@@ -199,7 +200,7 @@ const UI = (() => {
   }
 
   /**
-   * Updates the save status label in the title bar.
+   * updates the save status label in the title bar.
    * @param {string} msg
    */
   function setSaveStatus(msg) {
@@ -207,11 +208,11 @@ const UI = (() => {
     if (el) el.textContent = msg;
   }
 
-  // ─── Load Shared Document ─────────────────────────────────────────────────
+  // loading shared doc
 
   /**
-   * Loads a shared document from Firebase and populates the editor.
-   * Called on page load if a ?doc= param is present in the URL.
+   * loads a shared document from Firebase and populates the editor
+   * 
    *
    * @param {string} docId
    * @param {Object} editor - TinyMCE editor instance
@@ -235,7 +236,7 @@ const UI = (() => {
     }
   }
 
-  // ─── Export Modal ─────────────────────────────────────────────────────────
+  // exporting doc
 
   function openExportModal() {
     document.getElementById('export-modal').classList.add('open');
@@ -248,8 +249,8 @@ const UI = (() => {
   }
 
   /**
-   * Exports the mindmap SVG as a PNG image file.
-   * Uses Canvas to rasterize the SVG.
+   * exports the mindmap SVG as a PNG image file.
+   * 
    */
   function exportAsPNG() {
     const svg = document.querySelector('#mindmap svg');
@@ -285,7 +286,7 @@ const UI = (() => {
   }
 
   /**
-   * Exports the mindmap tree as a JSON file.
+   * exports the mindmap tree as a JSON file
    */
   function exportAsJSON() {
     if (!currentTree) {
@@ -304,8 +305,8 @@ const UI = (() => {
   }
 
   /**
-   * Generates a share link for the current document and displays it.
-   * Saves the document first if it hasn't been saved yet.
+   * Ggenerates a share link for the current doc and displays it
+   * saves the doc first if it hasn't been saved yet
    */
   async function generateAndShowShareLink() {
     const editor = tinymce.activeEditor;
@@ -332,7 +333,7 @@ const UI = (() => {
   }
 
   /**
-   * Copies the share link to clipboard.
+   * copies share link 2 clipboard
    */
   function copyShareLink() {
     const input = document.getElementById('share-link-input');
@@ -349,7 +350,7 @@ const UI = (() => {
       });
   }
 
-  // ─── Event Binding ────────────────────────────────────────────────────────
+  // binding event
 
   function bindEvents() {
     document.getElementById('save-btn')
@@ -376,7 +377,7 @@ const UI = (() => {
     document.getElementById('copy-link-btn')
       .addEventListener('click', copyShareLink);
 
-    // Close modal on backdrop click
+    // closing modal
     document.getElementById('export-modal')
       .addEventListener('click', (e) => {
         if (e.target === document.getElementById('export-modal')) {
@@ -385,7 +386,7 @@ const UI = (() => {
       });
   }
 
-  // ─── Public Init ─────────────────────────────────────────────────────────
+  // public init
 
   function init() {
     FirebaseService.init();
@@ -397,5 +398,5 @@ const UI = (() => {
 
 })();
 
-// Boot the app
+// app booting
 document.addEventListener('DOMContentLoaded', () => UI.init());
