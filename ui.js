@@ -179,9 +179,10 @@ const UI = (() => {
       .attr('rx', d => Math.max(40, d.textWidth / 2 + 14))
       .attr('ry', d => Math.max(16, 25 - d.depth * 2))
       .attr('fill', d => {
-        // color nodes by depth
-        const colors = ['#7b2ff7', '#9b51e0', '#b06fd8', '#c48fd0', '#d8b0e8'];
-        return colors[Math.min(d.depth, colors.length - 1)];
+        // color nodes by depth using the main purple-pink gradient
+        const gradient = ['#7b2ff7', '#d83cff', '#f107a3'];
+        const t = Math.min(d.depth / 5, 1);
+        return d3.interpolateRgbBasis(gradient)(t);
       })
       .attr('stroke', 'white')
       .attr('stroke-width', 1.5);

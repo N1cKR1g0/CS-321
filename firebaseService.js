@@ -151,7 +151,7 @@ const FirebaseService = (() => {
     }
   }
 
-  //  public API 
+  // public API 
   return {
     init,
     saveDocument,

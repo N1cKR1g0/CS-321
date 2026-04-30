@@ -29,6 +29,7 @@ const MindmapService = (() => {
   /**
    * builds a nested hierarchy tree from a list of header elements.
    * this uses header level (h1=1, h2=2, .et cetara.) to determine parent-child relationship
+   * Multiple h1s are placed under a virtual root (level 0) to create separate trees
    *
    * @param {NodeList|Array} headers - header elements
    * @returns {Object|null} - root node of tree, null if no headers
@@ -38,31 +39,24 @@ const MindmapService = (() => {
   function buildHierarchy(headers) {
     if (!headers || headers.length === 0) return null;
 
-    const stack = [];
-    let root = null;
+    let root = { name: '', level: 1, children: [] };
+    const stack = [{ node: root, level: 0 }];
 
     headers.forEach(h => {
       const level = parseInt(h.tagName[1]);
       const text = h.textContent.trim();
 
-      // skippign empty headers
+      // skipping empty headers
       if (!text) return;
 
       const node = { name: text, level, children: [] };
-
-      if (!root) {
-        root = node;
-        stack.push({ node, level });
-        return;
-      }
-
-      // pop the stack until we find a node at a higher (lower number) level
+      // pop the stack until we find a node at a lower level (higher number)
       while (stack.length > 0 && stack[stack.length - 1].level >= level) {
         stack.pop();
       }
 
       if (stack.length === 0) {
-        // new root level sib
+        // new root level sibling
         root.children.push(node);
       } else {
         stack[stack.length - 1].node.children.push(node);
@@ -100,8 +94,6 @@ const MindmapService = (() => {
 
   /**
    * restores a mindmap tree from a saved snapshot
-   * 
-   * 
    *
    * @param {Object} snapshot - saved tree object
    * @returns {Object|null} - restored tree, or null if invalid
