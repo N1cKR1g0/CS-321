@@ -151,40 +151,12 @@ const FirebaseService = (() => {
     }
   }
 
-  // share link
-
-  /**
-   * generates a shareable URL for a saved document
-   * the URL encodes the document ID as a query parameter so anyone
-   * with the link can open and view the mindmap
-   *
-   * @param {string} docId - the Firestore document ID
-   * @returns {string} - full shareable URL
-   */
-  function generateShareLink(docId) {
-    const base = window.location.origin + window.location.pathname;
-    return `${base}?doc=${encodeURIComponent(docId)}`;
-  }
-
-  /**
-   * read the document ID from the current page URL (if present)
-   * use on page load to auto-load a shared document
-   *
-   * @returns {string|null} - Document ID from URL, or null
-   */
-  function getDocIdFromUrl() {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('doc') || null;
-  }
-
   //  public API 
   return {
     init,
     saveDocument,
     loadDocument,
-    listRecentDocuments,
-    generateShareLink,
-    getDocIdFromUrl,
+    listRecentDocuments
   };
 
 })();

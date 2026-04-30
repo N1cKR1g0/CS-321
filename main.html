@@ -36,7 +36,7 @@
 
     <!-- left: tinyMCE editor (ui layer) -->
     <div class="left-panel">
-      <textarea id="editor-textarea">Welcome to MindScribe 321! Add headings to build your mind map.</textarea>
+      <textarea id="editor-textarea" placeholder="Welcome to MindScribe 321! Add headings to build your mind map."></textarea>
     </div>
 
     <!-- right: d3 mind map (UI Layer) -->
@@ -70,21 +70,6 @@
           </div>
         </button>
 
-        <button id="export-share-btn" class="export-option-btn">
-          <span class="icon">🔗</span>
-          <div>
-            <div class="label">Get Share Link</div>
-            <div class="desc">Save and generate a link anyone can open</div>
-          </div>
-        </button>
-
-      </div>
-
-      <!-- share link (shown after generation) -->
-      <div id="share-link-area">
-        <label>Shareable Link</label>
-        <input id="share-link-input" type="text" readonly>
-        <button id="copy-link-btn">Copy Link</button>
       </div>
 
       <div class="modal-footer">

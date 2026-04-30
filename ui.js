@@ -74,7 +74,7 @@ const UI = (() => {
 
   /**
    * renders mindmap hierarchy as d3 tree with elliptical nodes
-   * 
+   * when multiple h1s exist, they are positioned side-by-side with spacing
    *
    * @param {Object|null} tree - mindmap tree from MindmapService
    */
@@ -103,28 +103,66 @@ const UI = (() => {
     );
 
     const root = d3.hierarchy(tree);
-    const treeLayout = d3.tree().size([width - 100, height - 100]);
-    treeLayout(root);
+    
+    // Check if we have multiple h1s (children of virtual root at level 0)
+    const isMultipleRoots = root.data.level === 0 && root.children && root.children.length > 1;
+    
+    if (isMultipleRoots) {
+      // Render each h1 tree separately with horizontal spacing
+      const treeSpacing = width / (root.children.length + 1);
+      let offsetX = treeSpacing;
+      
+      root.children.forEach((h1Node, index) => {
+        const h1Root = d3.hierarchy(h1Node);
+        const treeLayout = d3.tree().size([treeSpacing - 80, height - 100]);
+        treeLayout(h1Root);
+        
+        // Create a separate group for each tree section
+        const treeGroup = g.append('g').attr('class', `tree-section-${index}`);
+        renderTreeSection(treeGroup, h1Root, offsetX, 0);
+        offsetX += treeSpacing;
+      });
+    } else {
+      // Single tree - render normally
+      const treeLayout = d3.tree().size([width - 100, height - 100]);
+      treeLayout(root);
+      const treeGroup = g.append('g').attr('class', 'tree-section-0');
+      renderTreeSection(treeGroup, root, 0, 0);
+    }
+  }
 
+  /**
+   * Helper function to render a tree section with line and node elements
+   * @param {Object} g - D3 group element
+   * @param {Object} root - D3 hierarchy root for this section
+   * @param {number} offsetX - horizontal offset for this section
+   * @param {number} offsetY - vertical offset for this section
+   * @param {number} sectionIndex - unique index for this tree section
+   */
+  function renderTreeSection(g, root, offsetX, offsetY, sectionIndex) {
+    const linkClass = `link-${sectionIndex}`;
+    const nodeClass = `node-${sectionIndex}`;
+    
     // draw links
-    g.selectAll('line')
+    g.selectAll(`line.${linkClass}`)
       .data(root.links())
       .enter()
       .append('line')
-      .attr('x1', d => d.source.x)
-      .attr('y1', d => d.source.y + 50)
-      .attr('x2', d => d.target.x)
-      .attr('y2', d => d.target.y + 50)
+      .attr('class', linkClass)
+      .attr('x1', d => d.source.x + offsetX)
+      .attr('y1', d => d.source.y + offsetY + 50)
+      .attr('x2', d => d.target.x + offsetX)
+      .attr('y2', d => d.target.y + offsetY + 50)
       .attr('stroke', '#c4a0ff')
       .attr('stroke-width', 1.5);
 
     // drawing nodes
-    const nodes = g.selectAll('g.node')
+    const nodes = g.selectAll(`g.${nodeClass}`)
       .data(root.descendants())
       .enter()
       .append('g')
-      .attr('class', 'node')
-      .attr('transform', d => `translate(${d.x}, ${d.y + 50})`);
+      .attr('class', nodeClass)
+      .attr('transform', d => `translate(${d.x + offsetX}, ${d.y + offsetY + 50})`);
 
     // measure text first, then draw ellipse behind it
     const texts = nodes.append('text')
@@ -240,8 +278,6 @@ const UI = (() => {
 
   function openExportModal() {
     document.getElementById('export-modal').classList.add('open');
-    // Reset share link area
-    document.getElementById('share-link-area').style.display = 'none';
   }
 
   function closeExportModal() {
@@ -304,52 +340,6 @@ const UI = (() => {
     closeExportModal();
   }
 
-  /**
-   * Ggenerates a share link for the current doc and displays it
-   * saves the doc first if it hasn't been saved yet
-   */
-  async function generateAndShowShareLink() {
-    const editor = tinymce.activeEditor;
-    if (!editor) return;
-
-    setSaveStatus('Saving for share...');
-    try {
-      await saveDocument(editor.getContent());
-      if (!currentDocId) throw new Error('No document ID after save');
-
-      const link = FirebaseService.generateShareLink(currentDocId);
-
-      const area = document.getElementById('share-link-area');
-      const input = document.getElementById('share-link-input');
-      area.style.display = 'block';
-      input.value = link;
-      input.select();
-
-      setSaveStatus('Saved ✓');
-    } catch (err) {
-      console.error('[UI] Share link generation failed:', err);
-      setSaveStatus('Share failed ✗');
-    }
-  }
-
-  /**
-   * copies share link 2 clipboard
-   */
-  function copyShareLink() {
-    const input = document.getElementById('share-link-input');
-    input.select();
-    navigator.clipboard.writeText(input.value)
-      .then(() => {
-        document.getElementById('copy-link-btn').textContent = 'Copied!';
-        setTimeout(() => {
-          document.getElementById('copy-link-btn').textContent = 'Copy Link';
-        }, 2000);
-      })
-      .catch(() => {
-        document.execCommand('copy'); // fallback
-      });
-  }
-
   // binding event
 
   function bindEvents() {
@@ -370,12 +360,6 @@ const UI = (() => {
 
     document.getElementById('export-json-btn')
       .addEventListener('click', exportAsJSON);
-
-    document.getElementById('export-share-btn')
-      .addEventListener('click', generateAndShowShareLink);
-
-    document.getElementById('copy-link-btn')
-      .addEventListener('click', copyShareLink);
 
     // closing modal
     document.getElementById('export-modal')
