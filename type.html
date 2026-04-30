@@ -5,23 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>MindScribe 321</title>
 
-  <!-- UI Layer: Styles -->
+  <!-- ui layer-->
   <link rel="stylesheet" href="style.css">
 
-  <!-- D3 — used by UI layer for rendering -->
+  <!-- d3 used by ui layer to render -->
   <script src="https://d3js.org/d3.v7.min.js"></script>
 
-  <!-- TinyMCE — self-hosted local copy -->
+  <!-- tinymce self host -->
   <script src="js/tinymce/tinymce.min.js"></script>
 
-  <!-- Firebase — used by Persistence layer -->
+  <!-- firebase for persistence  -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
 
 <body>
 
-  <!-- ── Title Bar ──────────────────────────────────────────────── -->
+  <!-- title-->
   <h1 id="title">
     MindScribe 321
     <div id="title-actions">
@@ -31,22 +31,22 @@
     </div>
   </h1>
 
-  <!-- ── Main Layout ────────────────────────────────────────────── -->
+  <!-- main layout -->
   <div class="editor-layout">
 
-    <!-- Left: TinyMCE Editor (UI Layer) -->
+    <!-- left: tinyMCE editor (ui layer) -->
     <div class="left-panel">
       <textarea id="editor-textarea">Welcome to MindScribe 321! Add headings to build your mind map.</textarea>
     </div>
 
-    <!-- Right: D3 Mind Map (UI Layer) -->
+    <!-- right: d3 mind map (UI Layer) -->
     <div class="right-panel">
       <div id="mindmap"></div>
     </div>
 
   </div>
 
-  <!-- ── Export / Share Modal ───────────────────────────────────── -->
+  <!-- export/share function -->
   <div id="export-modal">
     <div class="modal-box">
       <h2>Export &amp; Share</h2>
@@ -80,7 +80,7 @@
 
       </div>
 
-      <!-- Share link area (shown after generating) -->
+      <!-- share link (shown after generation) -->
       <div id="share-link-area">
         <label>Shareable Link</label>
         <input id="share-link-input" type="text" readonly>
@@ -93,15 +93,15 @@
     </div>
   </div>
 
-  <!-- ── JavaScript: Load in dependency order ───────────────────── -->
+  <!-- java script loading in dependency order  -->
 
-  <!-- Application Layer: Business Logic (no dependencies) -->
+  <!-- application layer: business logic (no dependencies) -->
   <script src="mindmapService.js"></script>
 
-  <!-- Persistence Layer: Firebase access (depends on Firebase SDK) -->
+  <!-- persistence, firebase layer using firebase SDK -->
   <script src="firebaseService.js"></script>
 
-  <!-- UI Layer: Wires everything together (depends on both above) -->
+  <!-- ui layer -->
   <script src="ui.js"></script>
 
 </body>
