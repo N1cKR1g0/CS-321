@@ -73,74 +73,109 @@ const UI = (() => {
   // d3 mind map renderer
 
   /**
-   * renders mindmap hierarchy as d3 tree with elliptical nodes
-   * when multiple h1s exist, they are positioned side-by-side with spacing
+   * Renders mindmap hierarchy as d3 tree(s) with elliptical nodes
    *
    * @param {Object|null} tree - mindmap tree from MindmapService
    */
   function renderMindmap(tree) {
     const container = document.querySelector('.right-panel');
-    const svg_container = document.getElementById('mindmap');
-    d3.select(svg_container).selectAll('*').remove();
+    const svg_container = resetMindMap();
 
     if (!tree) return;
 
     const width = container.clientWidth;
     const height = container.clientHeight;
 
-    const svg = d3.select(svg_container)
-      .append('svg')
-      .attr('width', width)
-      .attr('height', height);
-
+    const svg = d3.select(svg_container).append('svg').attr('width', width).attr('height', height);
     const g = svg.append('g');
-
-    // enable pan zoom
-    svg.call(
-      d3.zoom().on('zoom', (event) => {
-        g.attr('transform', event.transform);
-      })
-    );
+    enablePanZoom(svg, g);
     
     if (tree.children.length > 1) {
       // Render each h1 tree separately with horizontal spacing
-      const treeSpacing = width / (tree.children.length + 1);
+      const treeSpacing = width / (tree.children.length+1);
       let offsetX = treeSpacing;
       
       tree.children.forEach((h1Node, index) => {
-        const h1Root = d3.hierarchy(h1Node);
-        const treeLayout = d3.tree().size([treeSpacing - 80, height - 100]);
-        treeLayout(h1Root);
-        
-        // Create a separate group for each tree section
-        const treeGroup = g.append('g').attr('class', `tree-section-${index}`);
-        renderTreeSection(treeGroup, h1Root, offsetX, 0, index);
+        renderTree(g, h1Node, treeSpacing-50, height-100, index, offsetX, 0);
         offsetX += treeSpacing;
       });
-    } else {
+    } 
+    
+    else {
       // Single tree - render normally
-      const root = d3.hierarchy(tree.children[0]);
-      const treeLayout = d3.tree().size([width - 100, height - 100]);
-      treeLayout(root);
-      const treeGroup = g.append('g').attr('class', 'tree-section-0');
-      renderTreeSection(treeGroup, root, 0, 0);
+      renderTree(g, tree.children[0], width-50, height-100, 0, 0, 0);
     }
   }
 
   /**
-   * Helper function to render a tree section with line and node elements
-   * @param {Object} g - D3 group element
-   * @param {Object} root - D3 hierarchy root for this section
-   * @param {number} offsetX - horizontal offset for this section
-   * @param {number} offsetY - vertical offset for this section
-   * @param {number} sectionIndex - unique index for this tree section
+   * Clears the current graph contents and returns the container element.
+   * @returns {HTMLElement} The container element used for mind map rendering.
+   */
+  function resetMindMap() {
+    const svg_container = document.getElementById('mindmap');
+    d3.select(svg_container).selectAll('*').remove();
+    return svg_container;
+  }
+
+
+  /**
+   * Enables pan and zoom behavior on the rendered SVG container.
+   * @param {d3.Selection} svg - The D3 SVG selection to attach zoom behavior to.
+   * @param {d3.Selection} g - The D3 group element whose transform is updated.
+   */
+  function enablePanZoom(svg, g) {
+    svg.call(d3.zoom().on('zoom', (event) => { g.attr('transform', event.transform); }));
+  }
+
+  /**
+   * Renders a single mind map tree into the provided SVG group.
+   * @param {d3.Selection} g - The parent D3 group for this tree.
+   * @param {Object} root - The tree data object to render.
+   * @param {number} width - The available width for the tree layout.
+   * @param {number} height - The available height for the tree layout.
+   * @param {number} index - Unique index for the tree section.
+   * @param {number} offsetX - Horizontal offset applied to the tree.
+   * @param {number} offsetY - Vertical offset applied to the tree.
+   */
+  function renderTree(g, root, width, height, index, offsetX, offsetY) {
+    const tree = d3.hierarchy(root);
+    const treeLayout = d3.tree().size([width, height]);
+    treeLayout(tree);
+    const treeGroup = g.append('g').attr('class', `tree-section-${index}`);
+    renderTreeSection(treeGroup, tree, offsetX, offsetY, index);
+  }
+
+  /**
+   * Renders a tree section with text and node elements.
+   * @param {d3.Selection} g - The D3 group element for this tree section.
+   * @param {Object} root - The D3 hierarchy root for this section.
+   * @param {number} offsetX - Horizontal offset for rendered elements.
+   * @param {number} offsetY - Vertical offset for rendered elements.
+   * @param {number} sectionIndex - Unique index for this tree section.
    */
   function renderTreeSection(g, root, offsetX, offsetY, sectionIndex) {
-    const linkClass = `link-${sectionIndex}`;
-    const nodeClass = `node-${sectionIndex}`;
-    
     // draw links
-    g.selectAll(`line.${linkClass}`)
+    drawTreeLinks(g, root, offsetX, offsetY, sectionIndex)
+
+    // drawing nodes
+    const nodes = drawNodes(g, root, offsetX, offsetY, sectionIndex)
+
+    // measure text first, then draw ellipse behind it
+    writeTexts(nodes);
+    drawTextContainer(nodes);
+  }
+
+  /**
+   * Draws the connecting links for a tree section.
+   * @param {d3.Selection} g - The D3 group element to draw links into.
+   * @param {Object} root - The D3 hierarchy root for the tree section.
+   * @param {number} offsetX - Horizontal offset to apply to link endpoints.
+   * @param {number} offsetY - Vertical offset to apply to link endpoints.
+   * @param {number} sectionIndex - Unique index for this tree section.
+   */
+  function drawTreeLinks(g, root, offsetX, offsetY, sectionIndex) {
+    const linkClass = `link-${sectionIndex}`;
+     g.selectAll(`line.${linkClass}`)
       .data(root.links())
       .enter()
       .append('line')
@@ -149,19 +184,36 @@ const UI = (() => {
       .attr('y1', d => d.source.y + offsetY + 50)
       .attr('x2', d => d.target.x + offsetX)
       .attr('y2', d => d.target.y + offsetY + 50)
-      .attr('stroke', '#c4a0ff')
+      .attr('stroke', '#5228a1')
       .attr('stroke-width', 1.5);
+  }
 
-    // drawing nodes
+  /**
+   * Draws the node groups for a tree section.
+   * @param {d3.Selection} g - The D3 group element to draw nodes into.
+   * @param {Object} root - The D3 hierarchy root for the tree section.
+   * @param {number} offsetX - Horizontal offset to apply to node positions.
+   * @param {number} offsetY - Vertical offset to apply to node positions.
+   * @param {number} sectionIndex - Unique index for this tree section.
+   * @returns {d3.Selection} The entered node group selection.
+   */
+  function drawNodes(g, root, offsetX, offsetY, sectionIndex) {
+    const nodeClass = `node-${sectionIndex}`;
     const nodes = g.selectAll(`g.${nodeClass}`)
       .data(root.descendants())
       .enter()
       .append('g')
       .attr('class', nodeClass)
       .attr('transform', d => `translate(${d.x + offsetX}, ${d.y + offsetY + 50})`);
+    return nodes;
+  }
 
-    // measure text first, then draw ellipse behind it
-    const texts = nodes.append('text')
+  /**
+   * Appends text labels to each existing node group.
+   * @param {d3.Selection} nodes - The node group selection to add text to.
+   */
+  function writeTexts(nodes) {
+    nodes.append('text')
       .attr('text-anchor', 'middle')
       .attr('dy', '0.35em')
       .attr('fill', 'white')
@@ -170,7 +222,13 @@ const UI = (() => {
       .each(function(d) {
         d.textWidth = this.getBBox().width;
       });
+  }
 
+  /**
+   * Draws the ellipse background for each node after text width is measured.
+   * @param {d3.Selection} nodes - The node group selection with text appended.
+   */
+  function drawTextContainer(nodes) {
     nodes.insert('ellipse', 'text')
       .attr('rx', d => Math.max(40, d.textWidth / 2 + 14))
       .attr('ry', d => Math.max(16, 25 - d.depth * 2))
@@ -180,7 +238,7 @@ const UI = (() => {
         const t = Math.min(d.depth / 5, 1);
         return d3.interpolateRgbBasis(gradient)(t);
       })
-      .attr('stroke', 'white')
+      .attr('stroke', '#5228a1')
       .attr('stroke-width', 1.5);
   }
 

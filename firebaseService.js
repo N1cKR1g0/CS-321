@@ -8,12 +8,6 @@
  *  - loads a document by ID from Firestore
  *  - generates a shareable link for a saved document
  *  - lists recent documents for the current session
- *
- * 
- * 
- *
- * 
- * 
  */
 
 const FirebaseService = (() => {
