@@ -1,229 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MindScribe 321</title>
 
-<script src="https://d3js.org/d3.v7.min.js"></script>
-<script src="https://cdn.tiny.cloud/1/1m68ji9fcdxynvnu3r0zc4bo336yiluenxc479l26knzijyh/tinymce/8/tinymce.min.js"></script>
+  <!-- UI Layer: Styles -->
+  <link rel="stylesheet" href="style.css">
 
-<style>
-body {
-  margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
-  background: linear-gradient(135deg, #f5e8ff, #e8f1ff);
-  color: #222;
-}
+  <!-- D3 — used by UI layer for rendering -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
 
-#title {
-  margin: 0;
-  padding: 18px 30px;
-  color: white;
-  font-size: 34px;
-  font-style: oblique;
-  letter-spacing: 1px;
-  text-shadow: 2px 2px 5px rgba(0,0,0,0.35);
-  background: linear-gradient(90deg, #7b2ff7, #f107a3);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-}
+  <!-- TinyMCE — self-hosted local copy -->
+  <script src="js/tinymce/tinymce.min.js"></script>
 
-.editor-layout {
-  display: flex;
-  height: calc(100vh - 75px);
-  padding: 20px;
-  gap: 20px;
-  box-sizing: border-box;
-}
-
-.left-panel,
-.right-panel {
-  width: 50%;
-  border-radius: 18px;
-  overflow: hidden;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.18);
-  background: white;
-}
-
-.left-panel {
-  border: 2px solid rgba(123, 47, 247, 0.25);
-}
-
-.right-panel {
-  background: radial-gradient(circle at top, #ffffff, #eef3ff);
-  border: 2px solid rgba(241, 7, 163, 0.25);
-  position: relative;
-}
-
-.right-panel::before {
-  content: "Mind Map";
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  z-index: 10;
-  background: linear-gradient(90deg, #7b2ff7, #f107a3);
-  color: white;
-  padding: 8px 14px;
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: bold;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-}
-
-#mindmap {
-  width: 100%;
-  height: 100%;
-}
-
-.tox-tinymce {
-  height: 100%;
-  border: none;
-}
-
-.tox .tox-toolbar,
-.tox .tox-toolbar__primary,
-.tox .tox-menubar {
-  background: #faf7ff;
-}
-
-.tox .tox-edit-area__iframe {
-  background: #ffffff;
-}
-</style>
+  <!-- Firebase — used by Persistence layer -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
 
 <body>
 
-<h1>MindScribe 321</h1>
+  <!-- ── Title Bar ──────────────────────────────────────────────── -->
+  <h1 id="title">
+    MindScribe 321
+    <div id="title-actions">
+      <span id="save-status"></span>
+      <button id="save-btn" class="btn btn-outline">Save</button>
+      <button id="export-btn" class="btn btn-solid">Export / Share</button>
+    </div>
+  </h1>
 
-<div class="editor-layout">
-  <div class="left-panel">
-    <textarea>Welcome to MindScribe!</textarea>
+  <!-- ── Main Layout ────────────────────────────────────────────── -->
+  <div class="editor-layout">
+
+    <!-- Left: TinyMCE Editor (UI Layer) -->
+    <div class="left-panel">
+      <textarea id="editor-textarea">Welcome to MindScribe 321! Add headings to build your mind map.</textarea>
+    </div>
+
+    <!-- Right: D3 Mind Map (UI Layer) -->
+    <div class="right-panel">
+      <div id="mindmap"></div>
+    </div>
+
   </div>
 
-  <div class="right-panel">
-    <div id="mindmap"></div>
+  <!-- ── Export / Share Modal ───────────────────────────────────── -->
+  <div id="export-modal">
+    <div class="modal-box">
+      <h2>Export &amp; Share</h2>
+      <p>Choose how you'd like to export or share your mind map.</p>
+
+      <div class="export-options">
+
+        <button id="export-png-btn" class="export-option-btn">
+          <span class="icon">🖼️</span>
+          <div>
+            <div class="label">Export as PNG</div>
+            <div class="desc">Download the mind map as an image file</div>
+          </div>
+        </button>
+
+        <button id="export-json-btn" class="export-option-btn">
+          <span class="icon">📄</span>
+          <div>
+            <div class="label">Export as JSON</div>
+            <div class="desc">Download the mind map structure as JSON data</div>
+          </div>
+        </button>
+
+        <button id="export-share-btn" class="export-option-btn">
+          <span class="icon">🔗</span>
+          <div>
+            <div class="label">Get Share Link</div>
+            <div class="desc">Save and generate a link anyone can open</div>
+          </div>
+        </button>
+
+      </div>
+
+      <!-- Share link area (shown after generating) -->
+      <div id="share-link-area">
+        <label>Shareable Link</label>
+        <input id="share-link-input" type="text" readonly>
+        <button id="copy-link-btn">Copy Link</button>
+      </div>
+
+      <div class="modal-footer">
+        <button id="modal-close-btn" class="btn-cancel">Close</button>
+      </div>
+    </div>
   </div>
-</div>
 
-<script>
+  <!-- ── JavaScript: Load in dependency order ───────────────────── -->
 
-// Build hierarchy from headers without fake "Document"
-function buildHierarchy(headers) {
-  const stack = [];
-  let root = null;
+  <!-- Application Layer: Business Logic (no dependencies) -->
+  <script src="mindmapService.js"></script>
 
-  headers.forEach(h => {
-    const level = parseInt(h.tagName[1]);
-    const node = { name: h.textContent, children: [] };
+  <!-- Persistence Layer: Firebase access (depends on Firebase SDK) -->
+  <script src="firebaseService.js"></script>
 
-    if (!root) {
-      root = node;
-      stack.push(node);
-      return;
-    }
-
-    while (stack.length >= level) {
-      stack.pop();
-    }
-
-    stack[stack.length - 1].children.push(node);
-    stack.push(node);
-  });
-
-  return root;
-}
-
-// Render mind map as hierarchical tree with oval nodes
-function renderMindMap(headers) {
-  const data = buildHierarchy(headers);
-  if (!data) return;
-
-  d3.select("#mindmap").selectAll("*").remove();
-
-  const width = document.querySelector(".right-panel").clientWidth;
-  const height = document.querySelector(".right-panel").clientHeight;
-
-  const svg = d3.select("#mindmap")
-    .append("svg")
-    .attr("width", width)
-    .attr("height", height);
-
-  const g = svg.append("g");
-
-  svg.call(
-    d3.zoom().on("zoom", (event) => {
-      g.attr("transform", event.transform);
-    })
-  );
-
-  const root = d3.hierarchy(data);
-  const tree = d3.tree().size([width - 100, height - 100]);
-  tree(root);
-
-  // Links
-  g.selectAll("line")
-    .data(root.links())
-    .enter()
-    .append("line")
-    .attr("x1", d => d.source.x)
-    .attr("y1", d => d.source.y)
-    .attr("x2", d => d.target.x)
-    .attr("y2", d => d.target.y)
-    .attr("stroke", "#999");
-
-  // Nodes group
-  const nodes = g.selectAll("g.node")
-    .data(root.descendants())
-    .enter()
-    .append("g")
-    .attr("class", "node")
-    .attr("transform", d => `translate(${d.x}, ${d.y})`);
-
- 
-
-  // Labels inside ovals
-  const texts = nodes.append("text")
-  .attr("text-anchor", "middle")
-  .attr("dy", "0.35em")
-  .attr("fill", "white")
-  .text(d => d.data.name)
-  .each(function(d) {
-      // measure text width
-      const textWidth = this.getBBox().width;
-      d.textWidth = textWidth;
-  });
-  // Oval nodes (size depends on text)
-    nodes.insert("ellipse", "text") // insert before text so text is on top
-    .attr("rx", d => Math.max(40, d.textWidth/2 + 10)) // min width 40, else based on text
-    .attr("ry", d => 25 - d.depth*2) // vertical radius slightly smaller for deeper nodes
-    .attr("fill", "#4a90e2");
-}
-
-// Initialize TinyMCE with your existing toolbar/plugins
-tinymce.init({
-  selector: 'textarea',
-  height: '100%',
-  menubar: false,
-  plugins: [
-    'anchor', 'autolink', 'charmap', 'codesample', 'emoticons', 'link', 'lists', 'media', 'searchreplace', 'table', 'visualblocks', 'wordcount'
-  ],
-  toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography uploadcare | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
-        
-  setup: function(editor) {
-    editor.on('input change', function() {
-      const content = editor.getContent();
-
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(content, 'text/html');
-
-      const headers = doc.querySelectorAll('h1, h2, h3, h4, h5, h6');
-
-      renderMindMap(headers);
-    });
-  }
-});
-
-</script>
+  <!-- UI Layer: Wires everything together (depends on both above) -->
+  <script src="ui.js"></script>
 
 </body>
 </html>

@@ -1,0 +1,280 @@
+/* =========================================
+   MindScribe 321 — Global Styles
+   UI Layer: Visual presentation only
+   ========================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: linear-gradient(135deg, #f5e8ff, #e8f1ff);
+  color: #222;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* --- Title Bar --- */
+#title {
+  margin: 0;
+  padding: 18px 30px;
+  color: white;
+  font-size: 34px;
+  font-style: oblique;
+  letter-spacing: 1px;
+  text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.35);
+  background: linear-gradient(90deg, #7b2ff7, #f107a3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#title-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* --- Layout --- */
+.editor-layout {
+  display: flex;
+  height: calc(100vh - 75px);
+  padding: 20px;
+  gap: 20px;
+}
+
+.left-panel,
+.right-panel {
+  width: 50%;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.18);
+  background: white;
+}
+
+.left-panel {
+  border: 2px solid rgba(123, 47, 247, 0.25);
+}
+
+/* --- Mind Map Panel --- */
+.right-panel {
+  background: radial-gradient(circle at top, #ffffff, #eef3ff);
+  border: 2px solid rgba(241, 7, 163, 0.25);
+  position: relative;
+}
+
+.right-panel::before {
+  content: "Mind Map";
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 10;
+  background: linear-gradient(90deg, #7b2ff7, #f107a3);
+  color: white;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: bold;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+}
+
+#mindmap {
+  width: 100%;
+  height: 100%;
+}
+
+/* --- TinyMCE overrides --- */
+.tox-tinymce {
+  height: 100% !important;
+  border: none !important;
+}
+
+.tox .tox-toolbar,
+.tox .tox-toolbar__primary,
+.tox .tox-menubar {
+  background: #faf7ff !important;
+}
+
+/* --- Buttons --- */
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+}
+
+.btn:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn-outline {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+}
+
+.btn-solid {
+  background: white;
+  color: #7b2ff7;
+}
+
+/* --- Save status indicator --- */
+#save-status {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+  margin-right: 8px;
+  align-self: center;
+  font-style: normal;
+  letter-spacing: 0;
+}
+
+/* --- Export modal overlay --- */
+#export-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+
+#export-modal.open {
+  display: flex;
+}
+
+.modal-box {
+  background: white;
+  border-radius: 18px;
+  padding: 32px;
+  width: 420px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.25);
+}
+
+.modal-box h2 {
+  margin: 0 0 8px;
+  font-size: 22px;
+  background: linear-gradient(90deg, #7b2ff7, #f107a3);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.modal-box p {
+  color: #666;
+  font-size: 14px;
+  margin: 0 0 24px;
+}
+
+.export-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.export-option-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border: 2px solid #ede8ff;
+  border-radius: 12px;
+  background: #faf7ff;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  text-align: left;
+}
+
+.export-option-btn:hover {
+  border-color: #7b2ff7;
+  background: #f3eeff;
+}
+
+.export-option-btn .icon {
+  font-size: 26px;
+}
+
+.export-option-btn .label {
+  font-weight: bold;
+  font-size: 15px;
+  color: #222;
+}
+
+.export-option-btn .desc {
+  font-size: 12px;
+  color: #888;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-cancel {
+  background: #f0f0f0;
+  color: #555;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-cancel:hover {
+  background: #e0e0e0;
+}
+
+/* --- Share link area --- */
+#share-link-area {
+  display: none;
+  margin-top: 16px;
+  padding: 14px;
+  background: #f3eeff;
+  border-radius: 10px;
+  border: 1px solid #d4b8ff;
+}
+
+#share-link-area label {
+  font-size: 12px;
+  color: #7b2ff7;
+  font-weight: bold;
+  display: block;
+  margin-bottom: 6px;
+}
+
+#share-link-input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #c4a0ff;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #333;
+  background: white;
+}
+
+#copy-link-btn {
+  margin-top: 8px;
+  width: 100%;
+  padding: 9px;
+  background: linear-gradient(90deg, #7b2ff7, #f107a3);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+#copy-link-btn:hover {
+  opacity: 0.9;
+}
